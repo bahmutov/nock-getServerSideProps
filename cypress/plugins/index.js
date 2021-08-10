@@ -2,6 +2,7 @@ const nock = require('nock')
 const http = require('http')
 const next = require('next')
 
+// start the Next.js server when Cypress starts
 module.exports = async (on, config) => {
   const app = next({ dev: true })
   const handleNextRequests = app.getRequestHandler()
@@ -37,6 +38,8 @@ module.exports = async (on, config) => {
       console.log('nock will: %s %s%s respond with %d %o',
         method, hostname, path, statusCode, body)
 
+      // add one-time network stub like
+      // nock('https://icanhazdadjoke.com').get('/').reply(200, ...)
       method = method.toLowerCase()
       nock(hostname)[method](path).reply(statusCode, body)
 
