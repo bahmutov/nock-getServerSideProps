@@ -1,5 +1,6 @@
 {
-  "name": "my-next-app",
+  "name": "nock-get-server-side-props",
+  "description": "Run Next.js server inside Cypress plugins process and mock network calls made from getServerSideProps",
   "version": "0.1.0",
   "private": true,
   "scripts": {
