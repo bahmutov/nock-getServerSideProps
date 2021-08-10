@@ -1,48 +1,47 @@
+const nock = require('nock')
 const http = require('http')
 const next = require('next')
 
 module.exports = async (on, config) => {
-  // if (config.testingType === 'component') {
-  //   require('@cypress/react/plugins/next')(on, config)
-  // }
   const app = next({ dev: true })
   const handleNextRequests = app.getRequestHandler()
   await app.prepare()
 
-  let customServer
+  const customServer = new http.Server(async (req, res) => {
+    return handleNextRequests(req, res)
+  })
+
+  await new Promise((resolve, reject) => {
+    customServer.listen(3000, (err) => {
+      if (err) {
+        return reject(err)
+      }
+      console.log('> Ready on http://localhost:3000')
+      resolve()
+    })
+  })
 
   // register handlers for cy.task command
   // https://on.cypress.io/task
   on('task', {
-    async startNextApp() {
-      // if (app) {
-      //   console.log('closing previous app')
-      //   await app.close()
-      // }
+    clearNock() {
+      nock.restore()
+      nock.cleanAll()
 
-      if (customServer) {
-        console.log('closing previous server')
+      return null
+    },
 
-        await new Promise((resolve) => {
-          customServer.close(resolve)
-        })
-      }
+    async nock({ hostname, method, path, statusCode, body }) {
+      nock.activate()
 
-      customServer = new http.Server(async (req, res) => {
-        return handleNextRequests(req, res)
-      })
+      console.log('nock will: %s %s%s respond with %d %o',
+        method, hostname, path, statusCode, body)
 
-      return new Promise((resolve, reject) => {
-        customServer.listen(3000, (err) => {
-          if (err) {
-            return reject(err)
-          }
-          console.log('> Ready on http://localhost:3000')
-          // cy.task must return some value
-          resolve(null)
-        })
-      })
-    }
+      method = method.toLowerCase()
+      nock(hostname)[method](path).reply(statusCode, body)
+
+      return null
+    },
   })
 
   return config

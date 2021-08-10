@@ -2,7 +2,7 @@ import styles from './index.module.css'
 
 function HomePage({ joke }) {
   return <div className={styles.home}>
-    <div className={styles.content}>{joke}</div>
+    <div data-cy="joke" className={styles.content}>{joke}</div>
   </div>
 }
 
