@@ -1,0 +1,10 @@
+.content {
+  display: inline-block;
+  height: 2em;
+}
+.home {
+  width: 100%;
+  height: 100px;
+  display: grid;
+  place-items: center;
+}
