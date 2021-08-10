@@ -1,34 +1,35 @@
-const { createServer } = require('http')
-const { parse } = require('url')
+const http = require('http')
 const next = require('next')
 
-module.exports = (on, config) => {
+module.exports = async (on, config) => {
   // if (config.testingType === 'component') {
   //   require('@cypress/react/plugins/next')(on, config)
   // }
+  const app = next({ dev: true })
+  const handleNextRequests = app.getRequestHandler()
+  await app.prepare()
+
   let customServer
 
   // register handlers for cy.task command
   // https://on.cypress.io/task
   on('task', {
     async startNextApp() {
+      // if (app) {
+      //   console.log('closing previous app')
+      //   await app.close()
+      // }
+
       if (customServer) {
         console.log('closing previous server')
+
         await new Promise((resolve) => {
           customServer.close(resolve)
         })
       }
 
-      const dev = true
-      const app = next({ dev })
-      const handle = app.getRequestHandler()
-      await app.prepare()
-
-      customServer = createServer((req, res) => {
-        // Be sure to pass `true` as the second argument to `url.parse`.
-        // This tells it to parse the query portion of the URL.
-        const parsedUrl = parse(req.url, true)
-        handle(req, res, parsedUrl)
+      customServer = new http.Server(async (req, res) => {
+        return handleNextRequests(req, res)
       })
 
       return new Promise((resolve, reject) => {
